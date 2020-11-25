@@ -14,6 +14,8 @@
 		6670DC70256C9D1700A979B1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6670DC6E256C9D1700A979B1 /* Main.storyboard */; };
 		6670DC72256C9D1B00A979B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6670DC71256C9D1B00A979B1 /* Assets.xcassets */; };
 		6670DC7C256CA2FA00A979B1 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7B256CA2FA00A979B1 /* SwiftUIView.swift */; };
+		6670DC80256DF27C00A979B1 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7E256DF27C00A979B1 /* Camera.swift */; };
+		6670DC81256DF27C00A979B1 /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7F256DF27C00A979B1 /* Matrix.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +29,8 @@
 		6670DC71256C9D1B00A979B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6670DC73256C9D1B00A979B1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6670DC7B256CA2FA00A979B1 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
+		6670DC7E256DF27C00A979B1 /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+		6670DC7F256DF27C00A979B1 /* Matrix.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +63,8 @@
 		6670DC64256C9D1700A979B1 /* ModelViewer */ = {
 			isa = PBXGroup;
 			children = (
+				6670DC7E256DF27C00A979B1 /* Camera.swift */,
+				6670DC7F256DF27C00A979B1 /* Matrix.swift */,
 				6670DC65256C9D1700A979B1 /* AppDelegate.swift */,
 				6670DC67256C9D1700A979B1 /* ShaderTypes.h */,
 				6670DC68256C9D1700A979B1 /* Renderer.swift */,
@@ -141,8 +147,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6670DC81256DF27C00A979B1 /* Matrix.swift in Sources */,
 				6670DC6D256C9D1700A979B1 /* Shaders.metal in Sources */,
 				6670DC69256C9D1700A979B1 /* Renderer.swift in Sources */,
+				6670DC80256DF27C00A979B1 /* Camera.swift in Sources */,
 				6670DC6B256C9D1700A979B1 /* ViewController.swift in Sources */,
 				6670DC66256C9D1700A979B1 /* AppDelegate.swift in Sources */,
 				6670DC7C256CA2FA00A979B1 /* SwiftUIView.swift in Sources */,

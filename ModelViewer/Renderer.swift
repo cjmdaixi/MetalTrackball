@@ -12,7 +12,7 @@ import MetalKit
 import simd
 
 // The 256 byte aligned size of our uniform structure
-let alignedUniformsSize = (MemoryLayout<Uniforms>.size + 0xFF) & -0x100
+let alignedUniformsSize = ((MemoryLayout<Uniforms>.size + 255) / 256) * 256
 
 let maxBuffersInFlight = 3
 
@@ -38,10 +38,50 @@ class Renderer: NSObject, MTKViewDelegate {
     var uniforms: UnsafeMutablePointer<Uniforms>
     
     var projectionMatrix: matrix_float4x4 = matrix_float4x4()
-    
-    var rotation: Float = 0
+    var modelMatrix: matrix_float4x4 = matrix_float4x4(1)
     
     var mesh: MTKMesh
+    
+    var trackballSize: Float = 1.0
+    var rotationSpeed: Float = 3
+    var drawableSize: CGSize!
+    
+    func projectToTrackball(_ screenCoords: CGPoint) -> simd_float3 {
+        let sx = Float(screenCoords.x), sy = Float(drawableSize.height - screenCoords.y)
+        
+        let p2d = simd_float2(x: sx / Float(drawableSize.width) - 0.5,
+                                y: sy / Float(drawableSize.height) - 0.5)
+        
+        var z:Float = 0.0
+        let r2 = trackballSize * trackballSize
+        if simd_length_squared(p2d) <= r2 * 0.5 {
+            z = sqrt(r2 - simd_length_squared(p2d))
+        }
+        else {
+            z = r2 * 0.5 / simd_length(p2d)
+        }
+        
+        return simd_float3(p2d, z)
+    }
+    
+    func createRotation(firstPoint: CGPoint, nextPoint: CGPoint) -> simd_quatf{
+        let lastPos3D = simd_normalize(projectToTrackball(firstPoint))
+        let currPos3D = simd_normalize(projectToTrackball(nextPoint))
+        
+        // Compute axis of rotation:
+        let dir = simd_cross(lastPos3D, currPos3D)
+        
+        // Approximate rotation angle:
+        let dot = simd_dot(lastPos3D, currPos3D)
+        let clamped = simd_clamp(dot, -1, 1)
+        let angle = acos(clamped)
+        
+        return simd_quatf(angle: angle * rotationSpeed, axis: dir)
+    }
+    
+    func setModelMatrix(_ newModelMatrix: simd_float4x4){
+        modelMatrix = newModelMatrix
+    }
     
     init?(metalKitView: MTKView) {
         self.device = metalKitView.device!
@@ -93,7 +133,6 @@ class Renderer: NSObject, MTKViewDelegate {
         }
         
         super.init()
-        
     }
     
     class func buildMetalVertexDescriptor() -> MTLVertexDescriptor {
@@ -198,16 +237,16 @@ class Renderer: NSObject, MTKViewDelegate {
         uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents() + uniformBufferOffset).bindMemory(to:Uniforms.self, capacity:1)
     }
     
-    private func updateGameState() {
+    private func updateState() {
         /// Update any game state before rendering
         
+        //        uniforms[0].projectionMatrix = projectionMatrix
+        //        let viewMatrix = matrix4x4_translation(0.0, 0.0, -8.0)
+        //        //print("model matrix: \(modelMatrix)")
+        //        uniforms[0].modelViewMatrix = simd_mul(viewMatrix, modelMatrix)
         uniforms[0].projectionMatrix = projectionMatrix
-        
-        let rotationAxis = SIMD3<Float>(1, 1, 0)
-        let modelMatrix = matrix4x4_rotation(radians: rotation, axis: rotationAxis)
         let viewMatrix = matrix4x4_translation(0.0, 0.0, -8.0)
         uniforms[0].modelViewMatrix = simd_mul(viewMatrix, modelMatrix)
-        rotation += 0.01
     }
     
     func draw(in view: MTKView) {
@@ -224,7 +263,7 @@ class Renderer: NSObject, MTKViewDelegate {
             
             self.updateDynamicBufferState()
             
-            self.updateGameState()
+            self.updateState()
             
             /// Delay getting the currentRenderPassDescriptor until we absolutely need it to avoid
             ///   holding onto the drawable and blocking the display pipeline any longer than necessary
@@ -285,6 +324,7 @@ class Renderer: NSObject, MTKViewDelegate {
     
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         /// Respond to drawable size or orientation changes here
+        drawableSize = size
         
         let aspect = Float(size.width) / Float(size.height)
         projectionMatrix = matrix_perspective_right_hand(fovyRadians: radians_from_degrees(65), aspectRatio:aspect, nearZ: 0.1, farZ: 100.0)
