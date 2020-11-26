@@ -37,20 +37,21 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var uniforms: UnsafeMutablePointer<Uniforms>
     
-    var projectionMatrix: matrix_float4x4 = matrix_float4x4()
     var modelMatrix: matrix_float4x4 = matrix_float4x4(1)
     
     var mesh: MTKMesh
     
     var trackballSize: Float = 1.0
     var rotationSpeed: Float = 3
-    var drawableSize: CGSize!
+    var screenSize: CGSize!
+    
+    var camera: Camera!
     
     func projectToTrackball(_ screenCoords: CGPoint) -> simd_float3 {
-        let sx = Float(screenCoords.x), sy = Float(drawableSize.height - screenCoords.y)
+        let sx = Float(screenCoords.x), sy = Float(screenSize.height - screenCoords.y)
         
-        let p2d = simd_float2(x: sx / Float(drawableSize.width) - 0.5,
-                                y: sy / Float(drawableSize.height) - 0.5)
+        let p2d = simd_float2(x: sx / Float(screenSize.width) - 0.5,
+                              y: sy / Float(screenSize.height) - 0.5)
         
         var z:Float = 0.0
         let r2 = trackballSize * trackballSize
@@ -70,17 +71,18 @@ class Renderer: NSObject, MTKViewDelegate {
         
         // Compute axis of rotation:
         let dir = simd_cross(lastPos3D, currPos3D)
+        let dir2 = simd_normalize(dir)
         
         // Approximate rotation angle:
         let dot = simd_dot(lastPos3D, currPos3D)
         let clamped = simd_clamp(dot, -1, 1)
         let angle = acos(clamped)
         
-        return simd_quatf(angle: angle * rotationSpeed, axis: dir)
+        return simd_quatf(angle: angle * rotationSpeed, axis: dir2)
     }
     
-    func setModelMatrix(_ newModelMatrix: simd_float4x4){
-        modelMatrix = newModelMatrix
+    func load(ply fileName: String){
+        
     }
     
     init?(metalKitView: MTKView) {
@@ -100,6 +102,7 @@ class Renderer: NSObject, MTKViewDelegate {
         metalKitView.depthStencilPixelFormat = MTLPixelFormat.depth32Float_stencil8
         metalKitView.colorPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
         metalKitView.sampleCount = 1
+        metalKitView.clearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
         
         let mtlVertexDescriptor = Renderer.buildMetalVertexDescriptor()
         
@@ -131,6 +134,8 @@ class Renderer: NSObject, MTKViewDelegate {
             print("Unable to load texture. Error info: \(error)")
             return nil
         }
+        
+        camera = Camera()
         
         super.init()
     }
@@ -176,6 +181,7 @@ class Renderer: NSObject, MTKViewDelegate {
         pipelineDescriptor.vertexFunction = vertexFunction
         pipelineDescriptor.fragmentFunction = fragmentFunction
         pipelineDescriptor.vertexDescriptor = mtlVertexDescriptor
+        
         
         pipelineDescriptor.colorAttachments[0].pixelFormat = metalKitView.colorPixelFormat
         pipelineDescriptor.depthAttachmentPixelFormat = metalKitView.depthStencilPixelFormat
@@ -238,15 +244,10 @@ class Renderer: NSObject, MTKViewDelegate {
     }
     
     private func updateState() {
-        /// Update any game state before rendering
-        
-        //        uniforms[0].projectionMatrix = projectionMatrix
-        //        let viewMatrix = matrix4x4_translation(0.0, 0.0, -8.0)
-        //        //print("model matrix: \(modelMatrix)")
-        //        uniforms[0].modelViewMatrix = simd_mul(viewMatrix, modelMatrix)
-        uniforms[0].projectionMatrix = projectionMatrix
-        let viewMatrix = matrix4x4_translation(0.0, 0.0, -8.0)
-        uniforms[0].modelViewMatrix = simd_mul(viewMatrix, modelMatrix)
+        let pm = camera.projectionMatrix
+        let mvm = camera.viewMatrix
+        uniforms[0].projectionMatrix = pm!
+        uniforms[0].modelViewMatrix = simd_mul(mvm!, modelMatrix)
     }
     
     func draw(in view: MTKView) {
@@ -324,43 +325,8 @@ class Renderer: NSObject, MTKViewDelegate {
     
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         /// Respond to drawable size or orientation changes here
-        drawableSize = size
-        
-        let aspect = Float(size.width) / Float(size.height)
-        projectionMatrix = matrix_perspective_right_hand(fovyRadians: radians_from_degrees(65), aspectRatio:aspect, nearZ: 0.1, farZ: 100.0)
+        screenSize = UIScreen.main.bounds.size
+        let aspect = Float(screenSize.width) / Float(screenSize.height)
+        camera.aspectRatio = aspect
     }
-}
-
-// Generic matrix math utility functions
-func matrix4x4_rotation(radians: Float, axis: SIMD3<Float>) -> matrix_float4x4 {
-    let unitAxis = normalize(axis)
-    let ct = cosf(radians)
-    let st = sinf(radians)
-    let ci = 1 - ct
-    let x = unitAxis.x, y = unitAxis.y, z = unitAxis.z
-    return matrix_float4x4.init(columns:(vector_float4(    ct + x * x * ci, y * x * ci + z * st, z * x * ci - y * st, 0),
-                                         vector_float4(x * y * ci - z * st,     ct + y * y * ci, z * y * ci + x * st, 0),
-                                         vector_float4(x * z * ci + y * st, y * z * ci - x * st,     ct + z * z * ci, 0),
-                                         vector_float4(                  0,                   0,                   0, 1)))
-}
-
-func matrix4x4_translation(_ translationX: Float, _ translationY: Float, _ translationZ: Float) -> matrix_float4x4 {
-    return matrix_float4x4.init(columns:(vector_float4(1, 0, 0, 0),
-                                         vector_float4(0, 1, 0, 0),
-                                         vector_float4(0, 0, 1, 0),
-                                         vector_float4(translationX, translationY, translationZ, 1)))
-}
-
-func matrix_perspective_right_hand(fovyRadians fovy: Float, aspectRatio: Float, nearZ: Float, farZ: Float) -> matrix_float4x4 {
-    let ys = 1 / tanf(fovy * 0.5)
-    let xs = ys / aspectRatio
-    let zs = farZ / (nearZ - farZ)
-    return matrix_float4x4.init(columns:(vector_float4(xs,  0, 0,   0),
-                                         vector_float4( 0, ys, 0,   0),
-                                         vector_float4( 0,  0, zs, -1),
-                                         vector_float4( 0,  0, zs * nearZ, 0)))
-}
-
-func radians_from_degrees(_ degrees: Float) -> Float {
-    return (degrees / 180) * .pi
 }

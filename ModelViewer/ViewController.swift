@@ -8,13 +8,26 @@
 import UIKit
 import MetalKit
 import SwiftUI
+import GLKit
+import UIKit.UIGestureRecognizerSubclass
+
+class PanRecognizerWithInitialTouch : UIPanGestureRecognizer {
+  var initialTouchLocation: CGPoint!
+  
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+    super.touchesBegan(touches, with: event)
+    initialTouchLocation = touches.first!.location(in: view)
+  }
+}
 
 // Our iOS specific view controller
 class ViewController: UIViewController {
     
     var renderer: Renderer!
     var mtkView: MTKView!
-    var startMatrix: simd_float4x4!
+    var startRotationMatrix: simd_float4x4!
+    var startPoint: CGPoint!
+    var startDistance: Float!
     
     func addSwiftUIView() {
         let swiftUIView = SwiftUIView()
@@ -40,29 +53,22 @@ class ViewController: UIViewController {
         /// Notify the hosting controller that it has been moved to the current view controller.
         hostingController.didMove(toParent: self)
     }
-    @objc func panGestureRecognized(_ gestureRecognizer: UIPanGestureRecognizer) {
+    @objc func panGestureRecognized(_ gestureRecognizer: PanRecognizerWithInitialTouch) {
         guard gestureRecognizer.view != nil else {return}
         // Get the changes in the X and Y directions relative to
         // the superview's coordinate space.
         
         if gestureRecognizer.state == .began {
-            self.startMatrix = renderer.modelMatrix
+            self.startRotationMatrix = renderer.camera.rotationMatrix
+            self.startPoint = gestureRecognizer.initialTouchLocation
         }
         // Update the position for the .began, .changed, and .ended states
         if gestureRecognizer.state != .cancelled {
-            // Add the X and Y translation to the view's original position.
             let currentPoint = gestureRecognizer.location(in: view)
-            let translation = gestureRecognizer.translation(in: view)
-            let startPoint = CGPoint(x:currentPoint.x - translation.x, y: currentPoint.y - translation.y)
-            
-            let rotate = renderer.createRotation(firstPoint: startPoint, nextPoint: currentPoint)
-            //let newModelMatrix = simd_mul(simd_float4x4(rotate), self.startMatrix)
+            let rotate = renderer.createRotation(firstPoint: self.startPoint, nextPoint: currentPoint)
             let rotateMatrix = matrix4x4_rotation(radians: rotate.angle, axis: rotate.axis)
-            let newModelMatrix = simd_mul(rotateMatrix, self.startMatrix)
-            renderer.setModelMatrix(newModelMatrix)
-        }
-        else{
-            
+            let newRotationMatrix = simd_mul(rotateMatrix, self.startRotationMatrix)
+            renderer.camera.rotationMatrix = newRotationMatrix
         }
     }
     
@@ -70,15 +76,31 @@ class ViewController: UIViewController {
         //print("tap \(tapGestureRecognizer.state.rawValue)")
     }
     
+    @objc func pinchGestureRecognized(_ gestureRecognizer: UIPinchGestureRecognizer) {
+        guard gestureRecognizer.view != nil else {return}
+        
+        if gestureRecognizer.state == .began {
+            self.startDistance = renderer.camera.distance
+        }
+        // Update the position for the .began, .changed, and .ended states
+        if gestureRecognizer.state != .cancelled {
+            let scale:Float = Float(gestureRecognizer.scale)
+            renderer.camera.distance = (1 / scale) * self.startDistance
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         
-        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(ViewController.panGestureRecognized(_:)))
+        let panGestureRecognizer = PanRecognizerWithInitialTouch(target: self, action: #selector(ViewController.panGestureRecognized(_:)))
         view.addGestureRecognizer(panGestureRecognizer)
         
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.tapGestureRecognized(_:)))
         view.addGestureRecognizer(tapGestureRecognizer)
+        
+        let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(ViewController.pinchGestureRecognized(_:)))
+        view.addGestureRecognizer(pinchGestureRecognizer)
         
         guard let mtkView = view as? MTKView else {
             print("View of Gameview controller is not an MTKView")

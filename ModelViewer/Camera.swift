@@ -9,86 +9,127 @@
 import Foundation
 import UIKit
 
-func DegreesToRadians (_ value:Float) -> Float {
-    return value * Float(Double.pi) / 180.0
+
+// Generic matrix math utility functions
+func matrix4x4_rotation(radians: Float, axis: SIMD3<Float>) -> matrix_float4x4 {
+    let unitAxis = normalize(axis)
+    let ct = cosf(radians)
+    let st = sinf(radians)
+    let ci = 1 - ct
+    let x = unitAxis.x, y = unitAxis.y, z = unitAxis.z
+    return matrix_float4x4.init(columns:(vector_float4(    ct + x * x * ci, y * x * ci + z * st, z * x * ci - y * st, 0),
+                                         vector_float4(x * y * ci - z * st,     ct + y * y * ci, z * y * ci + x * st, 0),
+                                         vector_float4(x * z * ci + y * st, y * z * ci - x * st,     ct + z * z * ci, 0),
+                                         vector_float4(                  0,                   0,                   0, 1)))
 }
 
-class Camera: NSObject {
-    
-    fileprivate var projectionMatrix: Matrix4?
-    fileprivate var cameraMatrix: Matrix4?
-    
-    override init() {
-        super.init()
+func matrix4x4_translation(_ translationX: Float, _ translationY: Float, _ translationZ: Float) -> matrix_float4x4 {
+    return matrix_float4x4.init(columns:(vector_float4(1, 0, 0, 0),
+                                         vector_float4(0, 1, 0, 0),
+                                         vector_float4(0, 0, 1, 0),
+                                         vector_float4(translationX, translationY, translationZ, 1)))
+}
+
+func matrix4x4_scale(_ scaleX: Float, _ scaleY: Float, _ scaleZ: Float) -> matrix_float4x4 {
+    return matrix_float4x4.init(columns:(vector_float4(scaleX, 0, 0, 0),
+                                         vector_float4(0, scaleY, 0, 0),
+                                         vector_float4(0, 0, scaleZ, 0),
+                                         vector_float4(0, 0, 0, 1)))
+}
+
+
+func matrix_perspective_right_hand(fovyRadians fovy: Float, aspectRatio: Float, nearZ: Float, farZ: Float) -> matrix_float4x4 {
+    let ys = 1 / tanf(fovy * 0.5)
+    let xs = ys / aspectRatio
+    let zs = farZ / (nearZ - farZ)
+    return matrix_float4x4.init(columns:(vector_float4(xs,  0, 0,   0),
+                                         vector_float4( 0, ys, 0,   0),
+                                         vector_float4( 0,  0, zs, -1),
+                                         vector_float4( 0,  0, zs * nearZ, 0)))
+}
+
+func radians_from_degrees(_ degrees: Float) -> Float {
+    return (degrees / 180) * .pi
+}
+
+extension simd_float4x4{
+    static func perspective(fov: Float, aspect: Float, near: Float, far: Float)->matrix_float4x4{
+        let f = 1.0 / tanf(fov / 2.0)
+        let rows = [
+            simd_float4(f / aspect, 0.0, 0.0, 0.0),
+            simd_float4(0.0, f, 0.0, 0.0),
+            simd_float4(0.0, 0.0, (far + near) / (near - far), -1.0),
+            simd_float4(0.0, 0.0, (2.0 * far * near) / (near - far), 0.0)
+        ]
         
-        let fov = DegreesToRadians(55.0)
-        let aspect = Float(UIScreen.main.bounds.size.width / UIScreen.main.bounds.size.height)
-        let near: Float = 0.01
-        let far: Float = 500.0
-        
-        projectionMatrix = Matrix4.perspectiveMatrix(fov: fov, aspect: aspect, near: near, far: far)
-        setProjectionMatrix()
+        return matrix_float4x4(rows: rows)
     }
     
-    var matrix: [Float] {
-        if let cameraMatrix = cameraMatrix {
-            return cameraMatrix.matrix
-        }
+    static func look(at position: simd_float3, to target: simd_float3, up: simd_float3) -> matrix_float4x4{
+        let forward = simd_normalize(position - target)
+        let right = simd_cross(forward, up)
         
-        return Matrix4().matrix
+        let rows = [
+            simd_float4(right.x, right.y, right.z, 0),
+            simd_float4(up.x, up.y, up.z, 0),
+            simd_float4(forward.x, forward.y, forward.z, 0),
+            simd_float4(target.x, target.y, target.z, 1)
+        ]
+        return matrix_float4x4(rows: rows)
     }
-    
-    func setProjectionMatrix() {
-        cameraMatrix = Matrix4()
-        
-        if let cameraMatrix = cameraMatrix, let projectionMatrix = projectionMatrix {
-            self.cameraMatrix = projectionMatrix * cameraMatrix
-        }
-    }
-    
-    func translate(x: Float, y: Float, z: Float) {
-        let translationMatrix = Matrix4.translationMatrix(x: x, y: y, z: z)
-        
-        if let cameraMatrix = cameraMatrix {
-            self.cameraMatrix = translationMatrix * cameraMatrix
-        }
-    }
-    
-    func rotate(x: Float?, y: Float?, z: Float?) {
-        if let x = x {
-            rotateX(x)
-        }
-        
-        if let y = y {
-            rotateY(y)
-        }
-        
-        if let z = z {
-            rotateZ(z)
+}
+
+class Camera {
+    var projectionMatrix: simd_float4x4!
+    var viewMatrix: simd_float4x4!
+    var distance: Float = 8{
+        didSet{
+            let reverseTranslationMatrix = translationMatrix.inverse
+            viewMatrix = simd_mul(reverseTranslationMatrix, viewMatrix)
+            translationMatrix = matrix4x4_translation(0, 0, -distance)
+            viewMatrix = simd_mul(translationMatrix, viewMatrix)
+            
         }
     }
     
-    fileprivate func rotateX(_ angle: Float) {
-        let rotation = Matrix4.rotationMatrix(angle: angle, x: 1.0, y: 0.0, z: 0.0)
-        
-        if let cameraMatrix = cameraMatrix {
-            self.cameraMatrix = rotation * cameraMatrix
+    var translationMatrix: simd_float4x4!
+    
+    var rotationMatrix = matrix4x4_rotation(radians: 0, axis: simd_float3(0, 0, 1)){
+        didSet{
+            let reverseTranslationMatrix = translationMatrix.inverse
+            viewMatrix = simd_mul(reverseTranslationMatrix, viewMatrix)
+            let reverseRotationMatrix = oldValue.inverse
+            viewMatrix = simd_mul(reverseRotationMatrix, viewMatrix)
+            viewMatrix = simd_mul(rotationMatrix, viewMatrix)
+            viewMatrix = simd_mul(translationMatrix, viewMatrix)
         }
     }
     
-    fileprivate func rotateY(_ angle: Float) {
-        let rotation = Matrix4.rotationMatrix(angle: angle, x: 0.0, y: 1.0, z: 0.0)
-        
-        if let cameraMatrix = cameraMatrix {
-            self.cameraMatrix = rotation * cameraMatrix
+    var fov: Float = 65
+    var aspectRatio: Float = 1.0{
+        didSet{
+            projectionMatrix = matrix_perspective_right_hand(
+                fovyRadians: radians_from_degrees(fov),
+                aspectRatio:aspectRatio,
+                nearZ: nearZ, farZ: farZ
+            )
         }
     }
+    var nearZ: Float = 0.01
+    var farZ: Float = 100.0
     
-    fileprivate func rotateZ(_ angle: Float) {
-        let rotation = Matrix4.rotationMatrix(angle: angle, x: 0.0, y: 0.0, z: 1.0)
+    var matrix: simd_float4x4 {
+        simd_mul(projectionMatrix, viewMatrix)
+    }
+    
+    init(){
+        translationMatrix = matrix4x4_translation(0, 0, -distance)
         
-        if let cameraMatrix = cameraMatrix {
-            self.cameraMatrix = rotation * cameraMatrix
-        }
+        viewMatrix = simd_mul(translationMatrix, rotationMatrix)
+        projectionMatrix = matrix_perspective_right_hand(
+            fovyRadians: radians_from_degrees(fov),
+            aspectRatio:aspectRatio,
+            nearZ: nearZ, farZ: farZ
+        )
     }
 }
