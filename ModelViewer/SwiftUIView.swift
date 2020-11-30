@@ -8,8 +8,45 @@
 import SwiftUI
 
 struct SwiftUIView: View {
+    @EnvironmentObject var globalVariables: GlobalVariables
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(spacing: 15) {
+            Button(action:{
+                if let plyUrl = Bundle.main.url(forResource: "UpperJaw", withExtension: "ply"){
+                    globalVariables.renderer.load(ply: plyUrl)
+                }
+                
+            }){
+                Text("Upper Jaw")
+            }
+            
+            
+            Button(action:{
+                if let plyUrl = Bundle.main.url(forResource: "OrigionLower", withExtension: "ply"){
+                    globalVariables.renderer.load(ply: plyUrl)
+                }
+                
+            }){
+                Text("OrigionLower")
+            }
+            
+            Button(action:{
+                if let plyUrl = Bundle.main.url(forResource: "OrigionUpper", withExtension: "ply"){
+                    globalVariables.renderer.load(ply: plyUrl)
+                }
+                
+            }){
+                Text("OrigionUpper")
+            }
+            
+            Button(action:{
+                globalVariables.renderer.streaming()
+            }){
+                Text("Streaming")
+            }
+        }
+        .lineSpacing(/*@START_MENU_TOKEN@*/10.0/*@END_MENU_TOKEN@*/)
     }
 }
 

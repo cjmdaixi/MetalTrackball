@@ -116,7 +116,7 @@ class Camera {
         }
     }
     var nearZ: Float = 0.01
-    var farZ: Float = 100.0
+    var farZ: Float = 500.0
     
     var matrix: simd_float4x4 {
         simd_mul(projectionMatrix, viewMatrix)

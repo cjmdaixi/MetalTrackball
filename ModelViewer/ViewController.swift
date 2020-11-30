@@ -28,9 +28,11 @@ class ViewController: UIViewController {
     var startRotationMatrix: simd_float4x4!
     var startPoint: CGPoint!
     var startDistance: Float!
+    var globalVariables : GlobalVariables!
     
     func addSwiftUIView() {
-        let swiftUIView = SwiftUIView()
+        let swiftUIView = SwiftUIView().environmentObject(self.globalVariables)
+        
         let hostingController = UIHostingController(rootView: swiftUIView)
         
         /// Add as a child of the current view controller.
@@ -126,6 +128,9 @@ class ViewController: UIViewController {
         renderer.mtkView(mtkView, drawableSizeWillChange: mtkView.drawableSize)
         
         mtkView.delegate = renderer
+        
+        globalVariables = GlobalVariables()
+        globalVariables.renderer = newRenderer
         
         addSwiftUIView()
     }
