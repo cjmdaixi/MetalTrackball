@@ -237,7 +237,13 @@ class Renderer: NSObject, MTKViewDelegate {
                                             -plyHeader.modelCenter.y,
                                             -plyHeader.modelCenter.z)
         uniforms[0].modelViewMatrix = simd_mul(mvm!, modelMatrix)
-        uniforms[0].normalMatrix = simd_transpose(simd_inverse(uniforms[0].modelViewMatrix))
+        var mat3Rows = simd_float3x3()
+        for i in 0...2{
+            for j in 0...2{
+                mat3Rows[i, j] = uniforms[0].modelViewMatrix[i, j]
+            }
+        }
+        uniforms[0].normalMatrix = simd_transpose(simd_inverse(mat3Rows))
     }
     
     func draw(in view: MTKView) {

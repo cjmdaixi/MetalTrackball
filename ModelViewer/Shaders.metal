@@ -24,7 +24,7 @@ typedef struct
 typedef struct
 {
     float4 position [[position]];
-    float4 normal;
+    float3 normal;
 } ColorInOut;
 
 kernel void computeNormal(const device float3 *in_positions [[ buffer(0) ]],
@@ -52,23 +52,24 @@ vertex ColorInOut vertexShader(Vertex in [[stage_in]],
     ColorInOut out;
     
     float4 position = float4(in.position, 1.0);
-    float4 normal = float4(in.normal, 1.0);
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * position;
-    out.normal = normal;//uniforms.projectionMatrix * uniforms.normalMatrix * normal;
+    //out.normal = normal;
+    out.normal = normalize(uniforms.normalMatrix * in.normal);
     return out;
 }
 
 fragment float4 fragmentShader(ColorInOut in [[stage_in]],
+                               bool is_front_face [[ front_facing ]],
                                constant Uniforms & uniforms [[ buffer(BufferIndexUniforms) ]])
 {
-    float4 light_dir (0, 0, 1, 1);
+    float3 light_dir (0, 0, -1);
     float direction = dot(light_dir, in.normal);
     float4 color;
     
-    if(direction > 0){
-        color = float4(float3(1.0, 0, 0) * direction, 1.0);
+    if(is_front_face){
+        color = float4(float3(1.0, 0, 0) * abs(direction), 1.0);
     }else{
-        color = float4(float3(0, 1.0, 0) * direction, 1.0);
+        color = float4(float3(0, 1.0, 0) * abs(direction), 1.0);
     }
     //color = float4(1, 0, 0, 1);
     return color;
