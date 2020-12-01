@@ -13,6 +13,7 @@ struct PLYHeader{
     let faceCount: Int
     var modelCenter: simd_float3!
     var indexedVertices: Array<simd_float3>!
+    var indexedNormals: Array<simd_float3>!
     var vertices: Array<simd_float3>!
     var normals: Array<simd_float3>!
 }
@@ -105,6 +106,7 @@ func getPlyVertices(from filePointer: UnsafeMutablePointer<FILE>, header: inout 
                                      vertices_center.y / Float(header.vertexCount),
                                      vertices_center.z / Float(header.vertexCount))
     header.indexedVertices = vertices
+    header.indexedNormals = Array<simd_float3>(repeating: simd_float3.zero, count: header.vertexCount)
     return vertices
 }
 
@@ -117,6 +119,10 @@ func getPlyFaces(from filePointer: UnsafeMutablePointer<FILE>, header: inout PLY
     
     header.vertices = Array<simd_float3>(repeating: simd_float3.zero, count: header.faceCount * 3)
     header.normals = Array<simd_float3>(repeating: simd_float3.zero, count: header.faceCount * 3)
+    
+    var indexedNormals = [Int: [simd_float3]]()
+    
+    var indexedNormalsCount = Array<UInt8>(repeating: UInt8.zero, count: header.vertexCount)
     
     for i in 0..<header.faceCount{
         fread(&indexCount, MemoryLayout<UInt8>.size, 1, filePointer)
@@ -136,8 +142,22 @@ func getPlyFaces(from filePointer: UnsafeMutablePointer<FILE>, header: inout PLY
         header.normals[i * 3] = n
         header.normals[i * 3 + 1] = n
         header.normals[i * 3 + 2] = n
+        
+        header.indexedNormals[Int(faceIndexBuf[0])] += n
+        header.indexedNormals[Int(faceIndexBuf[1])] += n
+        header.indexedNormals[Int(faceIndexBuf[2])] += n
+        
+        indexedNormalsCount[Int(faceIndexBuf[0])] += 1
+        indexedNormalsCount[Int(faceIndexBuf[1])] += 1
+        indexedNormalsCount[Int(faceIndexBuf[2])] += 1
     }
     faceIndexBuf.deallocate()
+    
+    for i in 0..<header.vertexCount{
+        let count = Float(indexedNormalsCount[i])
+        let average = simd_float3(header.indexedNormals[i].x / count, header.indexedNormals[i].y / count, header.indexedNormals[i].z / count)
+        header.indexedNormals[i] = average
+    }
     return faces
 }
 

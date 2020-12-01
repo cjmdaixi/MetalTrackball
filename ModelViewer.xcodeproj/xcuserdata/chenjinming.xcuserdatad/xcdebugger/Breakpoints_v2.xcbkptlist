@@ -30,8 +30,8 @@
             filePath = "ModelViewer/Shaders.metal"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "34"
-            endingLineNumber = "34"
+            startingLineNumber = "35"
+            endingLineNumber = "35"
             landmarkName = "computeNormal(const device float3 *in_positions [[ buffer(0) ]], device float3 *out_normals [[ buffer(1) ]], uint id [[ thread_position_in_grid ]])"
             landmarkType = "9">
          </BreakpointContent>

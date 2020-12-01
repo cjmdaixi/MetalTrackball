@@ -24,6 +24,7 @@ typedef struct
 typedef struct
 {
     float4 position [[position]];
+    float size[[point_size]];
     float3 normal;
 } ColorInOut;
 
@@ -55,6 +56,7 @@ vertex ColorInOut vertexShader(Vertex in [[stage_in]],
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * position;
     //out.normal = normal;
     out.normal = normalize(uniforms.normalMatrix * in.normal);
+    out.size = 200 * (1 / out.position.z);
     return out;
 }
 

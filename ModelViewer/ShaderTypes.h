@@ -38,6 +38,7 @@ typedef struct
     matrix_float4x4 projectionMatrix;
     matrix_float4x4 modelViewMatrix;
     matrix_float3x3 normalMatrix;
+    float distance;
 } Uniforms;
 
 #endif /* ShaderTypes_h */
