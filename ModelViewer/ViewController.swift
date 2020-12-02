@@ -8,7 +8,6 @@
 import UIKit
 import MetalKit
 import SwiftUI
-import GLKit
 import UIKit.UIGestureRecognizerSubclass
 
 class PanRecognizerWithInitialTouch : UIPanGestureRecognizer {

@@ -41,6 +41,7 @@
 		66D04EBB256FC79F006B9598 /* OrigionLower.ply */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrigionLower.ply; sourceTree = "<group>"; };
 		66D04EC1256FC878006B9598 /* GlobalVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalVariables.swift; sourceTree = "<group>"; };
 		66D04EC42570D426006B9598 /* PlyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlyFormat.swift; sourceTree = "<group>"; };
+		66DA35162577250F00A7F45C /* ModelViewer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ModelViewer.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +74,7 @@
 		6670DC64256C9D1700A979B1 /* ModelViewer */ = {
 			isa = PBXGroup;
 			children = (
+				66DA35162577250F00A7F45C /* ModelViewer.entitlements */,
 				66D04EC0256FC7AE006B9598 /* Models */,
 				6670DC7E256DF27C00A979B1 /* Camera.swift */,
 				6670DC7F256DF27C00A979B1 /* Matrix.swift */,
@@ -320,6 +322,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ModelViewer/ModelViewer.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 62F4H4G4LF;
 				INFOPLIST_FILE = ModelViewer/Info.plist;
@@ -329,6 +332,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = shining3d.ModelViewer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(TARGET_NAME)/ShaderTypes.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -340,6 +344,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ModelViewer/ModelViewer.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 62F4H4G4LF;
 				INFOPLIST_FILE = ModelViewer/Info.plist;
@@ -349,6 +354,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = shining3d.ModelViewer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(TARGET_NAME)/ShaderTypes.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
