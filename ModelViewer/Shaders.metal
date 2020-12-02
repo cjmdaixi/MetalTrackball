@@ -19,7 +19,13 @@ typedef struct
 {
     float3 position [[attribute(0)]];
     float3 normal [[attribute(1)]];
-} Vertex;
+} VertexIn;
+
+typedef struct
+{
+    float3 position;
+    float3 normal;
+} ComputeVertexOut;
 
 typedef struct
 {
@@ -31,7 +37,7 @@ typedef struct
     float radius [[flat]];
 } ColorInOut;
 
-vertex ColorInOut vertexShader(Vertex in [[stage_in]],
+vertex ColorInOut vertexShader(VertexIn in [[stage_in]],
                                constant Uniforms & uniforms [[ buffer(BufferIndexUniforms) ]])
 {
     ColorInOut out;
