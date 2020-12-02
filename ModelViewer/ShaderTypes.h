@@ -41,5 +41,10 @@ typedef struct
     float distance;
 } Uniforms;
 
+typedef struct
+{
+    simd_float3 position;
+} ComputeVertexOut;
+
 #endif /* ShaderTypes_h */
 

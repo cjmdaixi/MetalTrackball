@@ -12,49 +12,45 @@
 
 // Including header shared between this Metal shader code and Swift/C code executing Metal API commands
 #import "ShaderTypes.h"
-
 using namespace metal;
 
-typedef struct
-{
-    float3 position [[attribute(0)]];
-    float3 normal [[attribute(1)]];
-} VertexIn;
 
-typedef struct
+
+kernel void computeShader(device float3 *positionsIn [[buffer(0)]],
+                          device ComputeVertexOut *positionsOut [[buffer(1)]],
+                          constant Uniforms & uniforms [[buffer(2)]],
+                          uint vid [[thread_position_in_grid]],
+                          uint l [[thread_position_in_threadgroup]])
 {
-    float3 position;
-    float3 normal;
-} ComputeVertexOut;
+    ComputeVertexOut out;
+    out.position = positionsIn[vid];
+    positionsOut[vid] = out;
+}
 
 typedef struct
 {
     float4 position [[position]];
-    float3 original_position;
-    float size[[point_size]];
     float3 normal;
-    float3 center[[flat]];
-    float radius [[flat]];
-} ColorInOut;
+} VertexOut;
 
-vertex ColorInOut vertexShader(VertexIn in [[stage_in]],
-                               constant Uniforms & uniforms [[ buffer(BufferIndexUniforms) ]])
+vertex VertexOut vertexShader(const device ComputeVertexOut *computeIn [[buffer(0)]],
+                              const device float3 *normals [[buffer(1)]],
+                              uint vid[[vertex_id]],
+                              constant Uniforms & uniforms [[ buffer(2) ]])
 {
-    ColorInOut out;
+    ComputeVertexOut in = computeIn[vid];
+    VertexOut out;
     
     float4 position = float4(in.position, 1.0);
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * position;
     //out.normal = normal;
-    out.normal = normalize(uniforms.normalMatrix * in.normal);
-    out.size = 25;//00 * (1 / out.position.z);
-    out.radius = out.size * out.size;
-    out.center = float3(out.position);
+    out.normal = normalize(uniforms.normalMatrix * normals[vid]);
     return out;
 }
 
-fragment float4 fragmentShader(ColorInOut in [[stage_in]],
+fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                bool is_front_face [[ front_facing ]],
-                               constant Uniforms & uniforms [[ buffer(BufferIndexUniforms) ]])
+                               constant Uniforms & uniforms [[ buffer(0) ]])
 {
     float3 light_dir (0, 0, -1);
     float direction = dot(light_dir, in.normal);
