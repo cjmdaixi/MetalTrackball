@@ -46,8 +46,6 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var vertexBuffer: MTLBuffer!
     var normalBuffer: MTLBuffer!
-    var indexedVertexBuffer: MTLBuffer!
-    var indexedNormalBuffer: MTLBuffer!
     
     var plyHeader: PLYHeader!
     var plyHeaders = [String: PLYHeader]()
@@ -109,15 +107,9 @@ class Renderer: NSObject, MTKViewDelegate {
         vertexBuffer = device.makeBuffer(bytes: plyHeader.vertices,
                                          length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3,
                                          options: .cpuCacheModeWriteCombined)
-        indexedVertexBuffer = device.makeBuffer(bytes: plyHeader.indexedVertices,
-                                         length: MemoryLayout<simd_float3>.stride * plyHeader.vertexCount,
-                                         options: .cpuCacheModeWriteCombined)
         
         normalBuffer = device.makeBuffer(bytes: plyHeader.normals,
                                          length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3,
-                                         options: .cpuCacheModeWriteCombined)
-        indexedNormalBuffer = device.makeBuffer(bytes: plyHeader.indexedNormals,
-                                         length: MemoryLayout<simd_float3>.stride * plyHeader.vertexCount,
                                          options: .cpuCacheModeWriteCombined)
     }
     
@@ -307,17 +299,14 @@ class Renderer: NSObject, MTKViewDelegate {
                 
                 renderEncoder.setDepthStencilState(depthState)
                 
-                //renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-                //renderEncoder.setVertexBuffer(normalBuffer, offset: 0, index: 1)
-                renderEncoder.setVertexBuffer(indexedVertexBuffer, offset: 0, index: 0)
-                renderEncoder.setVertexBuffer(indexedNormalBuffer, offset: 0, index: 1)
+                renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+                renderEncoder.setVertexBuffer(normalBuffer, offset: 0, index: 1)
                 
                 renderEncoder.setVertexBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index: BufferIndex.uniforms.rawValue)
                 renderEncoder.setFragmentBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index: BufferIndex.uniforms.rawValue)
                 
                 //rendering...
-                //renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: plyHeader.faceCount * 3)
-                renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: plyHeader.vertexCount)
+                renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: plyHeader.faceCount * 3)
                 
                 renderEncoder.popDebugGroup()
                 

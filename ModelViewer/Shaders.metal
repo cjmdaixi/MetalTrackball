@@ -47,16 +47,18 @@ vertex ColorInOut vertexShader(Vertex in [[stage_in]],
 }
 
 fragment float4 fragmentShader(ColorInOut in [[stage_in]],
+                               bool is_front_face [[ front_facing ]],
                                constant Uniforms & uniforms [[ buffer(BufferIndexUniforms) ]])
 {
     float3 light_dir (0, 0, -1);
     float direction = dot(light_dir, in.normal);
-    float dist = distance_squared(float3(in.position), in.center);
-//    if(dist > in.radius){
-//        discard_fragment();
-//    }
     float4 color;
-    color = float4(float3(1.0, 0, 0) * abs(direction), 1.0);
+    
+    if(is_front_face){
+        color = float4(float3(1.0, 0, 0) * abs(direction), 1.0);
+    }else{
+        color = float4(float3(0, 1.0, 0) * abs(direction), 1.0);
+    }
     //color = float4(1, 0, 0, 1);
     return color;
 }
