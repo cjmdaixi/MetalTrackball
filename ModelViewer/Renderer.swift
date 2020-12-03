@@ -112,7 +112,7 @@ class Renderer: NSObject, MTKViewDelegate {
         normalBuffer = device.makeBuffer(bytes: plyHeader.normals,
                                          length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3,
                                          options: .cpuCacheModeWriteCombined)
-        computeVertexBuffer = device.makeBuffer(length: MemoryLayout<ComputeVertexOut>.stride * plyHeader.faceCount * 3, options: .storageModePrivate)
+        computeVertexBuffer = device.makeBuffer(length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3, options: .storageModePrivate)
     }
     
     func streaming(){
@@ -137,7 +137,7 @@ class Renderer: NSObject, MTKViewDelegate {
         metalKitView.colorPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
         metalKitView.sampleCount = 1
         metalKitView.clearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
-                
+        
         do {
             pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device,
                                                                        metalKitView: metalKitView)
@@ -223,6 +223,12 @@ class Renderer: NSObject, MTKViewDelegate {
         }
         uniforms[0].normalMatrix = simd_transpose(simd_inverse(mat3Rows))
         uniforms[0].distance = camera.distance
+        
+        let viewportMatrixRows = [
+            simd_float4(Float(screenSize.width) / 2, 0, 0, 0 + Float(screenSize.width) / 2),
+            simd_float4(0, Float(screenSize.height) / 2, 0, 0 + Float(screenSize.height) / 2)
+        ]
+        uniforms[0].viewportMatrix = matrix_float4x2(rows: viewportMatrixRows)
     }
     
     func draw(in view: MTKView) {
@@ -277,10 +283,11 @@ class Renderer: NSObject, MTKViewDelegate {
                 
                 renderEncoder.setDepthStencilState(depthState)
                 
-                renderEncoder.setVertexBuffer(computeVertexBuffer, offset: 0, index: 0)
+                renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
                 renderEncoder.setVertexBuffer(normalBuffer, offset: 0, index: 1)
+                renderEncoder.setVertexBuffer(computeVertexBuffer, offset: 0, index: 2)
+                renderEncoder.setVertexBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index:3)
                 
-                renderEncoder.setVertexBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index:2)
                 renderEncoder.setFragmentBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index: 0)
                 
                 //rendering...

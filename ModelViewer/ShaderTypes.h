@@ -40,13 +40,9 @@ typedef struct
     matrix_float4x4 projectionMatrix;
     matrix_float4x4 modelViewMatrix;
     matrix_float3x3 normalMatrix;
+    matrix_float4x2 viewportMatrix;
     float distance;
 } Uniforms;
-
-typedef struct
-{
-    simd_float3 position;
-} ComputeVertexOut;
 
 #endif /* ShaderTypes_h */
 
