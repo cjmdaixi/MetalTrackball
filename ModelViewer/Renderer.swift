@@ -289,7 +289,6 @@ class Renderer: NSObject, MTKViewDelegate {
                 renderEncoder.popDebugGroup()
                 
                 renderEncoder.endEncoding()
-                
                 if let drawable = view.currentDrawable {
                     commandBuffer.present(drawable)
                 }

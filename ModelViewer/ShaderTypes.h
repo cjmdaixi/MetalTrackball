@@ -14,8 +14,10 @@
 #ifdef __METAL_VERSION__
 #define NS_ENUM(_type, _name) enum _name : _type _name; enum _name : _type
 #define NSInteger metal::int32_t
+#define NONPERSPECTIVE [[center_no_perspective]]
 #else
 #import <Foundation/Foundation.h>
+#define NONPERSPECTIVE
 #endif
 
 #include <simd/simd.h>
