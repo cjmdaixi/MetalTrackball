@@ -52,33 +52,6 @@ func radians_from_degrees(_ degrees: Float) -> Float {
     return (degrees / 180) * .pi
 }
 
-extension simd_float4x4{
-    static func perspective(fov: Float, aspect: Float, near: Float, far: Float)->matrix_float4x4{
-        let f = 1.0 / tanf(fov / 2.0)
-        let rows = [
-            simd_float4(f / aspect, 0.0, 0.0, 0.0),
-            simd_float4(0.0, f, 0.0, 0.0),
-            simd_float4(0.0, 0.0, (far + near) / (near - far), -1.0),
-            simd_float4(0.0, 0.0, (2.0 * far * near) / (near - far), 0.0)
-        ]
-        
-        return matrix_float4x4(rows: rows)
-    }
-    
-    static func look(at position: simd_float3, to target: simd_float3, up: simd_float3) -> matrix_float4x4{
-        let forward = simd_normalize(position - target)
-        let right = simd_cross(forward, up)
-        
-        let rows = [
-            simd_float4(right.x, right.y, right.z, 0),
-            simd_float4(up.x, up.y, up.z, 0),
-            simd_float4(forward.x, forward.y, forward.z, 0),
-            simd_float4(target.x, target.y, target.z, 1)
-        ]
-        return matrix_float4x4(rows: rows)
-    }
-}
-
 class Camera {
     var projectionMatrix: simd_float4x4!
     var viewMatrix: simd_float4x4!
