@@ -17,8 +17,6 @@
 		6670DC80256DF27C00A979B1 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7E256DF27C00A979B1 /* Camera.swift */; };
 		6670DC81256DF27C00A979B1 /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7F256DF27C00A979B1 /* Matrix.swift */; };
 		66D04EBC256FC79F006B9598 /* UpperJaw.ply in Resources */ = {isa = PBXBuildFile; fileRef = 66D04EB9256FC79F006B9598 /* UpperJaw.ply */; };
-		66D04EBD256FC79F006B9598 /* OrigionUpper.ply in Resources */ = {isa = PBXBuildFile; fileRef = 66D04EBA256FC79F006B9598 /* OrigionUpper.ply */; };
-		66D04EBE256FC79F006B9598 /* OrigionLower.ply in Resources */ = {isa = PBXBuildFile; fileRef = 66D04EBB256FC79F006B9598 /* OrigionLower.ply */; };
 		66D04EC2256FC878006B9598 /* GlobalVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D04EC1256FC878006B9598 /* GlobalVariables.swift */; };
 		66D04EC52570D426006B9598 /* PlyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D04EC42570D426006B9598 /* PlyFormat.swift */; };
 /* End PBXBuildFile section */
@@ -37,8 +35,6 @@
 		6670DC7E256DF27C00A979B1 /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
 		6670DC7F256DF27C00A979B1 /* Matrix.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
 		66D04EB9256FC79F006B9598 /* UpperJaw.ply */ = {isa = PBXFileReference; lastKnownFileType = file; path = UpperJaw.ply; sourceTree = "<group>"; };
-		66D04EBA256FC79F006B9598 /* OrigionUpper.ply */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrigionUpper.ply; sourceTree = "<group>"; };
-		66D04EBB256FC79F006B9598 /* OrigionLower.ply */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrigionLower.ply; sourceTree = "<group>"; };
 		66D04EC1256FC878006B9598 /* GlobalVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalVariables.swift; sourceTree = "<group>"; };
 		66D04EC42570D426006B9598 /* PlyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlyFormat.swift; sourceTree = "<group>"; };
 		66DA35162577250F00A7F45C /* ModelViewer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ModelViewer.entitlements; sourceTree = "<group>"; };
@@ -96,8 +92,6 @@
 		66D04EC0256FC7AE006B9598 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				66D04EBB256FC79F006B9598 /* OrigionLower.ply */,
-				66D04EBA256FC79F006B9598 /* OrigionUpper.ply */,
 				66D04EB9256FC79F006B9598 /* UpperJaw.ply */,
 			);
 			path = Models;
@@ -162,8 +156,6 @@
 			files = (
 				66D04EBC256FC79F006B9598 /* UpperJaw.ply in Resources */,
 				6670DC72256C9D1B00A979B1 /* Assets.xcassets in Resources */,
-				66D04EBE256FC79F006B9598 /* OrigionLower.ply in Resources */,
-				66D04EBD256FC79F006B9598 /* OrigionUpper.ply in Resources */,
 				6670DC70256C9D1700A979B1 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

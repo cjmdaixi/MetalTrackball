@@ -12,7 +12,7 @@ import UIKit.UIGestureRecognizerSubclass
 
 class PanRecognizerWithInitialTouch : UIPanGestureRecognizer {
   var initialTouchLocation: CGPoint!
-  
+    
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
     super.touchesBegan(touches, with: event)
     initialTouchLocation = touches.first!.location(in: view)
@@ -25,6 +25,7 @@ class ViewController: UIViewController {
     var renderer: Renderer!
     var mtkView: MTKView!
     var startRotationMatrix: simd_float4x4!
+    var startModelMatrix: simd_float4x4!
     var startPoint: CGPoint!
     var startDistance: Float!
     var globalVariables : GlobalVariables!
@@ -73,6 +74,31 @@ class ViewController: UIViewController {
         }
     }
     
+    @objc func translateGestureRecognized(_ gestureRecognizer: PanRecognizerWithInitialTouch) {
+        guard gestureRecognizer.view != nil else {return}
+        // Get the changes in the X and Y directions relative to
+        // the superview's coordinate space.
+        
+        if gestureRecognizer.state == .began {
+            self.startModelMatrix = renderer.modelMatrix
+            self.startPoint = gestureRecognizer.location(in: view)
+            print("start point:\(String(describing: self.startPoint))")
+        }
+        // Update the position for the .began, .changed, and .ended states
+        if gestureRecognizer.state != .cancelled {
+            let currentPoint = gestureRecognizer.location(in: view)
+            print("current point:\(String(describing: currentPoint)) fingers:\(gestureRecognizer.numberOfTouches)")
+            if gestureRecognizer.numberOfTouches < 2{
+                return
+            }
+            let trans = renderer.createTranslation(firstPoint: self.startPoint, nextPoint: currentPoint)
+            print("trans:\(String(describing: trans))")
+            let transMatrix = matrix4x4_translation(trans.x, trans.y, trans.z)
+            let newModelMatrix = simd_mul(transMatrix, self.startModelMatrix)
+            renderer.modelMatrix = newModelMatrix
+        }
+    }
+    
     @objc func tapGestureRecognized(_ tapGestureRecognizer: UITapGestureRecognizer) {
         //print("tap \(tapGestureRecognizer.state.rawValue)")
     }
@@ -95,10 +121,12 @@ class ViewController: UIViewController {
         
         
         let panGestureRecognizer = PanRecognizerWithInitialTouch(target: self, action: #selector(ViewController.panGestureRecognized(_:)))
+        panGestureRecognizer.maximumNumberOfTouches = 1
         view.addGestureRecognizer(panGestureRecognizer)
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.tapGestureRecognized(_:)))
-        view.addGestureRecognizer(tapGestureRecognizer)
+        let translateGestureRecognizer = PanRecognizerWithInitialTouch(target: self, action: #selector(ViewController.translateGestureRecognized(_:)))
+        translateGestureRecognizer.minimumNumberOfTouches = 2
+        view.addGestureRecognizer(translateGestureRecognizer)
         
         let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(ViewController.pinchGestureRecognized(_:)))
         view.addGestureRecognizer(pinchGestureRecognizer)

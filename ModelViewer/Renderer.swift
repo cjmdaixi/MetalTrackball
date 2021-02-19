@@ -74,15 +74,26 @@ class Renderer: NSObject, MTKViewDelegate {
         let currPos3D = simd_normalize(projectToTrackball(nextPoint))
         
         // Compute axis of rotation:
-        let dir = simd_cross(lastPos3D, currPos3D)
-        let dir2 = simd_normalize(dir)
+        let dir = simd_normalize(simd_cross(lastPos3D, currPos3D))
         
         // Approximate rotation angle:
         let dot = simd_dot(lastPos3D, currPos3D)
         let clamped = simd_clamp(dot, -1, 1)
         let angle = acos(clamped)
         
-        return simd_quatf(angle: angle * rotationSpeed, axis: dir2)
+        return simd_quatf(angle: angle * rotationSpeed, axis: dir)
+    }
+    
+    func createTranslation(firstPoint: CGPoint, nextPoint: CGPoint) -> simd_float3{
+        let firstPos2D = simd_float4(Float(firstPoint.x), Float(-firstPoint.y), 0, 1)
+        let currPos2D = simd_float4(Float(nextPoint.x), Float(-nextPoint.y), 0, 1)
+        //let mvm = camera.projectionMatrix * camera.viewMatrix
+        let mvm = camera.viewMatrix!
+        let inverse_mvm = simd_inverse(mvm)
+        let firstPos3D = simd_mul(inverse_mvm, firstPos2D)
+        let currPos3D = simd_mul(inverse_mvm, currPos2D)
+        let trans_vec = currPos3D - firstPos3D
+        return simd_float3(trans_vec.x, trans_vec.y, trans_vec.z)
     }
     
     func load(ply fileUrl: URL){
@@ -113,10 +124,10 @@ class Renderer: NSObject, MTKViewDelegate {
                                          length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3,
                                          options: .cpuCacheModeWriteCombined)
         computeVertexBuffer = device.makeBuffer(length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3, options: .storageModePrivate)
-    }
-    
-    func streaming(){
         
+        modelMatrix = matrix4x4_translation(-plyHeader.modelCenter.x,
+                                            -plyHeader.modelCenter.y,
+                                            -plyHeader.modelCenter.z)
     }
     
     init?(metalKitView: MTKView) {
@@ -211,9 +222,7 @@ class Renderer: NSObject, MTKViewDelegate {
         let pm = camera.projectionMatrix
         let mvm = camera.viewMatrix
         uniforms[0].projectionMatrix = pm!
-        modelMatrix = matrix4x4_translation(-plyHeader.modelCenter.x,
-                                            -plyHeader.modelCenter.y,
-                                            -plyHeader.modelCenter.z)
+        
         uniforms[0].modelViewMatrix = simd_mul(mvm!, modelMatrix)
         var mat3Rows = simd_float3x3()
         for i in 0...2{
