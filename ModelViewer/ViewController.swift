@@ -83,18 +83,15 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         if gestureRecognizer.state == .began {
             self.startModelMatrix = renderer.modelMatrix
             self.startPoint = gestureRecognizer.location(in: view)
-            self.startDistance = renderer.camera.distance
-            self.touchesDistance = nil
         }
         // Update the position for the .began, .changed, and .ended states
         if gestureRecognizer.state != .cancelled {
-            let currentPoint = gestureRecognizer.location(in: view)
-            if currentPoint == self.startPoint{
-                return
-            }
             if gestureRecognizer.numberOfTouches < 2{
                 return
             }
+            
+            let currentPoint = gestureRecognizer.location(in: view)
+            
             let trans = renderer.createTranslation(firstPoint: self.startPoint, nextPoint: currentPoint)
             let transMatrix = matrix4x4_translation(trans.x, trans.y, trans.z)
             let newModelMatrix = simd_mul(transMatrix, self.startModelMatrix)
@@ -111,8 +108,12 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         }
         // Update the position for the .began, .changed, and .ended states
         if gestureRecognizer.state != .cancelled {
+            if gestureRecognizer.numberOfTouches < 2{
+                return
+            }
+            
             let scale:Float = Float(gestureRecognizer.scale)
-            renderer.camera.distance = (1 / scale) * self.startDistance
+            renderer.camera.distance = (Float(1) / scale) * self.startDistance
         }
     }
     
@@ -153,6 +154,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         
         let translateGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(ViewController.translateGestureRecognized(_:)))
         translateGestureRecognizer.minimumNumberOfTouches = 2
+        translateGestureRecognizer.maximumNumberOfTouches = 2
         translateGestureRecognizer.delegate = self
         view.addGestureRecognizer(translateGestureRecognizer)
         

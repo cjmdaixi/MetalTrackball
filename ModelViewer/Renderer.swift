@@ -41,6 +41,7 @@ class Renderer: NSObject, MTKViewDelegate {
     var trackballSize: Float = 1.0
     var rotationSpeed: Float = 3
     var translationSpeed: Float = 0.2
+    var scaleSpeed: Float = 0.5
     var screenSize: CGSize!
     
     var camera: Camera!
