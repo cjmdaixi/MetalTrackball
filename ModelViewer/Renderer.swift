@@ -40,6 +40,7 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var trackballSize: Float = 1.0
     var rotationSpeed: Float = 3
+    var translationSpeed: Float = 0.2
     var screenSize: CGSize!
     
     var camera: Camera!
@@ -87,12 +88,11 @@ class Renderer: NSObject, MTKViewDelegate {
     func createTranslation(firstPoint: CGPoint, nextPoint: CGPoint) -> simd_float3{
         let firstPos2D = simd_float4(Float(firstPoint.x), Float(-firstPoint.y), 0, 1)
         let currPos2D = simd_float4(Float(nextPoint.x), Float(-nextPoint.y), 0, 1)
-        //let mvm = camera.projectionMatrix * camera.viewMatrix
-        let mvm = camera.viewMatrix!
+        let mvm = camera.projectionMatrix * camera.viewMatrix
         let inverse_mvm = simd_inverse(mvm)
         let firstPos3D = simd_mul(inverse_mvm, firstPos2D)
         let currPos3D = simd_mul(inverse_mvm, currPos2D)
-        let trans_vec = currPos3D - firstPos3D
+        let trans_vec = (currPos3D - firstPos3D) * self.translationSpeed
         return simd_float3(trans_vec.x, trans_vec.y, trans_vec.z)
     }
     

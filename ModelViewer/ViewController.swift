@@ -20,7 +20,7 @@ class PanRecognizerWithInitialTouch : UIPanGestureRecognizer {
 }
 
 // Our iOS specific view controller
-class ViewController: UIViewController {
+class ViewController: UIViewController, UIGestureRecognizerDelegate {
     
     var renderer: Renderer!
     var mtkView: MTKView!
@@ -28,6 +28,7 @@ class ViewController: UIViewController {
     var startModelMatrix: simd_float4x4!
     var startPoint: CGPoint!
     var startDistance: Float!
+    var touchesDistance: Float!
     var globalVariables : GlobalVariables!
     
     func addSwiftUIView() {
@@ -74,7 +75,7 @@ class ViewController: UIViewController {
         }
     }
     
-    @objc func translateGestureRecognized(_ gestureRecognizer: PanRecognizerWithInitialTouch) {
+    @objc func translateGestureRecognized(_ gestureRecognizer: UIPanGestureRecognizer) {
         guard gestureRecognizer.view != nil else {return}
         // Get the changes in the X and Y directions relative to
         // the superview's coordinate space.
@@ -82,25 +83,24 @@ class ViewController: UIViewController {
         if gestureRecognizer.state == .began {
             self.startModelMatrix = renderer.modelMatrix
             self.startPoint = gestureRecognizer.location(in: view)
-            print("start point:\(String(describing: self.startPoint))")
+            self.startDistance = renderer.camera.distance
+            self.touchesDistance = nil
         }
         // Update the position for the .began, .changed, and .ended states
         if gestureRecognizer.state != .cancelled {
             let currentPoint = gestureRecognizer.location(in: view)
-            print("current point:\(String(describing: currentPoint)) fingers:\(gestureRecognizer.numberOfTouches)")
+            if currentPoint == self.startPoint{
+                return
+            }
             if gestureRecognizer.numberOfTouches < 2{
                 return
             }
             let trans = renderer.createTranslation(firstPoint: self.startPoint, nextPoint: currentPoint)
-            print("trans:\(String(describing: trans))")
             let transMatrix = matrix4x4_translation(trans.x, trans.y, trans.z)
             let newModelMatrix = simd_mul(transMatrix, self.startModelMatrix)
             renderer.modelMatrix = newModelMatrix
+            
         }
-    }
-    
-    @objc func tapGestureRecognized(_ tapGestureRecognizer: UITapGestureRecognizer) {
-        //print("tap \(tapGestureRecognizer.state.rawValue)")
     }
     
     @objc func pinchGestureRecognized(_ gestureRecognizer: UIPinchGestureRecognizer) {
@@ -116,6 +116,33 @@ class ViewController: UIViewController {
         }
     }
     
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+           shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer)
+            -> Bool {
+       // If the gesture recognizer's view isn't one of the squares, do not
+       // allow simultaneous recognition.
+        guard gestureRecognizer.view != nil else {return false}
+        guard otherGestureRecognizer.view != nil else {return false}
+        
+       // If the gesture recognizers are on diferent views, do not allow
+       // simultaneous recognition.
+       if gestureRecognizer.view != otherGestureRecognizer.view {
+          return false
+       }
+       // If either gesture recognizer is a long press, do not allow
+       // simultaneous recognition.
+       if gestureRecognizer is UILongPressGestureRecognizer ||
+              otherGestureRecognizer is UILongPressGestureRecognizer {
+          return false
+       }
+        if gestureRecognizer is PanRecognizerWithInitialTouch ||
+               otherGestureRecognizer is PanRecognizerWithInitialTouch {
+           return false
+        }
+     
+       return true
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -124,8 +151,9 @@ class ViewController: UIViewController {
         panGestureRecognizer.maximumNumberOfTouches = 1
         view.addGestureRecognizer(panGestureRecognizer)
         
-        let translateGestureRecognizer = PanRecognizerWithInitialTouch(target: self, action: #selector(ViewController.translateGestureRecognized(_:)))
+        let translateGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(ViewController.translateGestureRecognized(_:)))
         translateGestureRecognizer.minimumNumberOfTouches = 2
+        translateGestureRecognizer.delegate = self
         view.addGestureRecognizer(translateGestureRecognizer)
         
         let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(ViewController.pinchGestureRecognized(_:)))
