@@ -13,7 +13,7 @@ struct SwiftUIView: View {
     var body: some View {
         VStack(spacing: 15) {
             Button(action:{
-                if let plyUrl = Bundle.main.url(forResource: "UpperJaw", withExtension: "ply"){
+                if let plyUrl = Bundle.main.url(forResource: "Bearded guy", withExtension: "ply"){
                     globalVariables.renderer.load(ply: plyUrl)
                 }
                 

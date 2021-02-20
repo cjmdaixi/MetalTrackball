@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6621527A25E1012100570B22 /* Bearded guy.ply in Resources */ = {isa = PBXBuildFile; fileRef = 6621527925E1012100570B22 /* Bearded guy.ply */; };
 		6670DC66256C9D1700A979B1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC65256C9D1700A979B1 /* AppDelegate.swift */; };
 		6670DC69256C9D1700A979B1 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC68256C9D1700A979B1 /* Renderer.swift */; };
 		6670DC6B256C9D1700A979B1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC6A256C9D1700A979B1 /* ViewController.swift */; };
@@ -16,12 +17,12 @@
 		6670DC7C256CA2FA00A979B1 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7B256CA2FA00A979B1 /* SwiftUIView.swift */; };
 		6670DC80256DF27C00A979B1 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7E256DF27C00A979B1 /* Camera.swift */; };
 		6670DC81256DF27C00A979B1 /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6670DC7F256DF27C00A979B1 /* Matrix.swift */; };
-		66D04EBC256FC79F006B9598 /* UpperJaw.ply in Resources */ = {isa = PBXBuildFile; fileRef = 66D04EB9256FC79F006B9598 /* UpperJaw.ply */; };
 		66D04EC2256FC878006B9598 /* GlobalVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D04EC1256FC878006B9598 /* GlobalVariables.swift */; };
 		66D04EC52570D426006B9598 /* PlyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D04EC42570D426006B9598 /* PlyFormat.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6621527925E1012100570B22 /* Bearded guy.ply */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bearded guy.ply"; sourceTree = "<group>"; };
 		6670DC62256C9D1700A979B1 /* ModelViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ModelViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6670DC65256C9D1700A979B1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6670DC67256C9D1700A979B1 /* ShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
@@ -34,7 +35,6 @@
 		6670DC7B256CA2FA00A979B1 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		6670DC7E256DF27C00A979B1 /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
 		6670DC7F256DF27C00A979B1 /* Matrix.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
-		66D04EB9256FC79F006B9598 /* UpperJaw.ply */ = {isa = PBXFileReference; lastKnownFileType = file; path = UpperJaw.ply; sourceTree = "<group>"; };
 		66D04EC1256FC878006B9598 /* GlobalVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalVariables.swift; sourceTree = "<group>"; };
 		66D04EC42570D426006B9598 /* PlyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlyFormat.swift; sourceTree = "<group>"; };
 		66DA35162577250F00A7F45C /* ModelViewer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ModelViewer.entitlements; sourceTree = "<group>"; };
@@ -92,7 +92,7 @@
 		66D04EC0256FC7AE006B9598 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				66D04EB9256FC79F006B9598 /* UpperJaw.ply */,
+				6621527925E1012100570B22 /* Bearded guy.ply */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -154,7 +154,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				66D04EBC256FC79F006B9598 /* UpperJaw.ply in Resources */,
+				6621527A25E1012100570B22 /* Bearded guy.ply in Resources */,
 				6670DC72256C9D1B00A979B1 /* Assets.xcassets in Resources */,
 				6670DC70256C9D1700A979B1 /* Main.storyboard in Resources */,
 			);
