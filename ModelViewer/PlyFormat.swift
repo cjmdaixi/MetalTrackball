@@ -119,9 +119,7 @@ func getPlyFaces(from filePointer: UnsafeMutablePointer<FILE>, header: inout PLY
     
     header.vertices = Array<simd_float3>(repeating: simd_float3.zero, count: header.faceCount * 3)
     header.normals = Array<simd_float3>(repeating: simd_float3.zero, count: header.faceCount * 3)
-    
-    var indexedNormals = [Int: [simd_float3]]()
-    
+        
     var indexedNormalsCount = Array<UInt8>(repeating: UInt8.zero, count: header.vertexCount)
     
     for i in 0..<header.faceCount{
@@ -135,7 +133,7 @@ func getPlyFaces(from filePointer: UnsafeMutablePointer<FILE>, header: inout PLY
         let p2 = header.indexedVertices[Int(faceIndexBuf[2])]
         let v0 = p1 - p0;
         let v1 = p2 - p0;
-        let n = simd_normalize(simd_cross(v1, v0));
+        let n = simd_normalize(simd_cross(v0, v1));
         header.vertices[i * 3] = p0
         header.vertices[i * 3 + 1] = p1
         header.vertices[i * 3 + 2] = p2

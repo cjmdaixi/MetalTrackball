@@ -22,18 +22,21 @@
 
 #include <simd/simd.h>
 
-typedef NS_ENUM(NSInteger, BufferIndex)
+typedef struct
 {
-    BufferIndexMeshPositions = 0,
-    BufferIndexMeshNormals   = 1,
-    BufferIndexUniforms      = 2
-};
+    simd_float3 position;
+    simd_float4 ambient;
+    simd_float4 diffuse;
+    simd_float4 specular;
+} LightSource;
 
-typedef NS_ENUM(NSInteger, VertexAttribute)
+typedef struct
 {
-    VertexAttributePosition  = 0,
-    VertexAttributeNormal  = 1,
-};
+    simd_float4 ambient;
+    simd_float4 diffuse;
+    simd_float4 specular;
+    float shininess;
+} Material;
 
 typedef struct
 {
@@ -42,6 +45,9 @@ typedef struct
     matrix_float3x3 normalMatrix;
     matrix_float4x2 viewportMatrix;
     float distance;
+    LightSource lightSource;
+    Material frontMaterial;
+    Material backMaterial;
 } Uniforms;
 
 #endif /* ShaderTypes_h */

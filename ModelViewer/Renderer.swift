@@ -26,7 +26,6 @@ class Renderer: NSObject, MTKViewDelegate {
     var dynamicUniformBuffer: MTLBuffer
     var pipelineState: MTLRenderPipelineState
     var depthState: MTLDepthStencilState
-    var computePipelineState: MTLComputePipelineState!
     
     let inFlightSemaphore = DispatchSemaphore(value: maxBuffersInFlight)
     
@@ -48,7 +47,6 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var vertexBuffer: MTLBuffer!
     var normalBuffer: MTLBuffer!
-    var computeVertexBuffer: MTLBuffer!
     
     var plyHeader: PLYHeader!
     var plyHeaders = [String: PLYHeader]()
@@ -124,7 +122,6 @@ class Renderer: NSObject, MTKViewDelegate {
         normalBuffer = device.makeBuffer(bytes: plyHeader.normals,
                                          length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3,
                                          options: .cpuCacheModeWriteCombined)
-        computeVertexBuffer = device.makeBuffer(length: MemoryLayout<simd_float3>.stride * plyHeader.faceCount * 3, options: .storageModePrivate)
         
         modelMatrix = matrix4x4_translation(-plyHeader.modelCenter.x,
                                             -plyHeader.modelCenter.y,
@@ -163,27 +160,10 @@ class Renderer: NSObject, MTKViewDelegate {
         depthStateDescriptor.isDepthWriteEnabled = true
         guard let state = device.makeDepthStencilState(descriptor:depthStateDescriptor) else { return nil }
         depthState = state
-        
-        computePipelineState = Renderer.initComputePipelineState(device)
-        
+                
         camera = Camera()
         
         super.init()
-    }
-    
-    class func initComputePipelineState(_ device: MTLDevice) -> MTLComputePipelineState!{
-        let library = device.makeDefaultLibrary()!
-        do {
-            if let compute = library.makeFunction(name: "computeShader") {
-                let computePipelineState = try device.makeComputePipelineState(function: compute)
-                return computePipelineState
-            }
-            print("create compute shader error!")
-        } catch {
-            print("Failed to create compute pipeline state")
-            return nil
-        }
-        return nil
     }
     
     class func buildRenderPipelineWithDevice(device: MTLDevice,
@@ -239,6 +219,21 @@ class Renderer: NSObject, MTKViewDelegate {
             simd_float4(0, Float(screenSize.height) / 2, 0, 0 + Float(screenSize.height) / 2)
         ]
         uniforms[0].viewportMatrix = matrix_float4x2(rows: viewportMatrixRows)
+        
+        uniforms[0].lightSource.position = simd_float3(0.6, 0.6, 1.0)
+        uniforms[0].lightSource.ambient = simd_float4(0.175, 0.175, 0.175, 1.0)
+        uniforms[0].lightSource.diffuse = simd_float4(0.6, 0.6, 0.6, 1.0)
+        uniforms[0].lightSource.specular = simd_float4(0.95, 0.95, 0.95, 1.0)
+        
+        uniforms[0].frontMaterial.ambient = simd_float4(0.19216, 0.52941, 0.80784, 1.0)
+        uniforms[0].frontMaterial.diffuse = simd_float4(0.19216, 0.52941, 0.80784, 1.0)
+        uniforms[0].frontMaterial.specular = simd_float4(0.19216, 0.52941, 0.80784, 1.0)
+        uniforms[0].frontMaterial.shininess = 9
+        
+        uniforms[0].backMaterial.ambient = simd_float4(0.02745, 0.08627, 0.13725, 1.0)
+        uniforms[0].backMaterial.diffuse = simd_float4(0.2, 0.2, 0.2, 1.0)
+        uniforms[0].backMaterial.specular = simd_float4(0.398, 0.398, 0.398, 1.0)
+        uniforms[0].backMaterial.shininess = 5
     }
     
     func draw(in view: MTKView) {
@@ -259,19 +254,6 @@ class Renderer: NSObject, MTKViewDelegate {
             self.updateDynamicBufferState()
             
             self.updateState()
-            
-            if let computeEncoder = commandBuffer.makeComputeCommandEncoder() {
-                
-                // Compute kernel
-                let groupsize = MTLSizeMake(3, 1, 1)
-                let numgroups = MTLSizeMake(plyHeader.faceCount, 1, 1)
-                computeEncoder.setComputePipelineState(self.computePipelineState)
-                computeEncoder.setBuffer(vertexBuffer, offset: 0, index: 0)
-                computeEncoder.setBuffer(computeVertexBuffer, offset: 0, index: 1)
-                computeEncoder.setBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index: 2)
-                computeEncoder.dispatchThreadgroups(numgroups, threadsPerThreadgroup: groupsize)
-                computeEncoder.endEncoding()
-            }
             
             /// Delay getting the currentRenderPassDescriptor until we absolutely need it to avoid
             ///   holding onto the drawable and blocking the display pipeline any longer than necessary
@@ -295,8 +277,7 @@ class Renderer: NSObject, MTKViewDelegate {
                 
                 renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
                 renderEncoder.setVertexBuffer(normalBuffer, offset: 0, index: 1)
-                renderEncoder.setVertexBuffer(computeVertexBuffer, offset: 0, index: 2)
-                renderEncoder.setVertexBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index:3)
+                renderEncoder.setVertexBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index:2)
                 
                 renderEncoder.setFragmentBuffer(dynamicUniformBuffer, offset:uniformBufferOffset, index: 0)
                 

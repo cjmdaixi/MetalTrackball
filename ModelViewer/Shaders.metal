@@ -14,100 +14,81 @@
 #import "ShaderTypes.h"
 using namespace metal;
 
-kernel void computeShader(device float3 *positionsIn [[buffer(0)]],
-                          device float3 *computeOut [[buffer(1)]],
-                          constant Uniforms & uniforms [[buffer(2)]],
-                          uint vid [[thread_position_in_grid]],
-                          uint pid [[thread_position_in_threadgroup]])
+void DirectionalLight(constant LightSource &light, float3 normal, float3 eye, float shininess, thread float4 &ambient, thread float4 &diffuse, thread float4 &specular)
 {
-    float4 position = uniforms.projectionMatrix * uniforms.modelViewMatrix * float4(positionsIn[vid], 1.0);;
+    float3 VP = normalize(light.position);
+    float3 HV = normalize(VP + eye);
     
-    threadgroup float2 p[3];
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-    p[pid] = uniforms.viewportMatrix * position;
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-        
-    float a = length(p[1] - p[2]);
-    float b = length(p[2] - p[0]);
-    float c = length(p[1] - p[0]);
+    float nDotVP = saturate(dot(normal, VP));
+    float nDotHV = saturate(dot(normal, HV));
+    float spec = pow(nDotHV, shininess) * (shininess + 2.0) / 8.0;
     
-    float alpha = acos((b * b + c * c - a * a) / (2.0 * b * c));
-    float beta = acos((a * a + c * c - b * b) / (2.0 * a * c));
+    if(isnan(spec)){
+        spec = 0.0;
+    }
     
-    float ha = abs(c * sin(beta));
-    float hb = abs(c * sin(alpha));
-    float hc = abs(b * sin(alpha));
+    ambient += light.ambient;
+    diffuse += light.diffuse * nDotVP;
+    specular += light.specular * spec * nDotVP;
+}
+
+constant float3 eye = float3(0.0, 0.0, -1.0);
+
+float4 Lighting(constant LightSource &light, constant Material &material, float3 normal)
+{
+    float4 ambient = float4(0.0);
+    float4 diffuse = float4(0.0);
+    float4 specular = float4(0.0);
     
-    float3 edge = float3(pid == 0? ha: 0, pid == 1? hb: 0, pid == 2? hc: 0);
+    DirectionalLight(light, normal, eye, material.shininess, ambient, diffuse, specular);
     
-    computeOut[vid] = edge;
+    float4 color = float4(0.0);
+    color += (ambient * material.ambient);
+    color += (diffuse * material.diffuse);
+    color += (specular * material.specular);
+    color.a = material.ambient.a;
+    
+    return color;
 }
 
 typedef struct
 {
     float4 position [[position]];
-    float3 normal;
-    float3 edge[[center_no_perspective]];
+    float4 frontColor [[flat]];
+    float4 backColor[[flat]];
 } VertexOut;
+
+constant float3 light_vert = float3(0.5, 0.5, 1.0);
 
 vertex VertexOut vertexShader(const device float3 *positionsIn [[buffer(0)]],
                               const device float3 *normals [[buffer(1)]],
-                              const device float3 *computeIn [[buffer(2)]],
-                              constant Uniforms & uniforms [[ buffer(3) ]],
+                              constant Uniforms & uniforms [[ buffer(2) ]],
                               uint vid[[vertex_id]])
 {
     VertexOut out;
-    out.edge = computeIn[vid];
-    
     float4 position = float4(positionsIn[vid], 1.0);
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * position;
-    //out.normal = normal;
-    out.normal = normalize(uniforms.normalMatrix * normals[vid]);
-    return out;
-}
-
-constant float lineWidth = 1.2;
-constant float3 lineColor = (0, 0, 0);
-
-float3 shadeLine(float3 color, float3 edge){
-    float d = min(edge.x, edge.y);
-    d = min(d, edge.z);
+    auto normal = normalize(uniforms.normalMatrix * normals[vid]);
     
-    float mixVal;
-    if(d < lineWidth - 1.0){
-        mixVal = 1.0;
-    }
-    else if(d > lineWidth + 1.0){
-        mixVal = 0.0;
-    }
-    else{
-        float x = d - (lineWidth - 1.0);
-        mixVal = exp2(-2.0 * (x * x));
-    }
-    return mix(color, lineColor, mixVal);
+    auto intensity = min(abs(dot(normal, light_vert)), 1.0);
+    out.frontColor = float4(1.0, 0, 0, 1.0) * intensity;
+    out.backColor = float4(0.0, 1.0, 0, 1.0) * intensity;
+    //out.frontColor = Lighting(uniforms.lightSource, uniforms.frontMaterial, normal);
+    //out.backColor = Lighting(uniforms.lightSource, uniforms.backMaterial, normal);
+    return out;
 }
 
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                bool is_front_face [[ front_facing ]],
                                constant Uniforms & uniforms [[ buffer(0) ]])
 {
-    float3 light_dir (0, 0, -1);
-    float direction = dot(light_dir, in.normal);
-    float3 color;
+    float4 color;
     
     if(is_front_face){
-        color = float3(1.0, 0, 0);
+        color = in.frontColor;
     }else{
-        color = float3(0, 1.0, 0);
+        color = in.backColor;
     }
     
-    color = shadeLine(color, in.edge);
-    
-    float4 outputColor;
-    if(is_front_face){
-        outputColor = float4(color * abs(direction), 1.0);
-    }else{
-        outputColor = float4(color * abs(direction), 1.0);
-    }
-    return outputColor;
+    return color;
 }
