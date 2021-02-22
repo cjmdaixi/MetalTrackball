@@ -23,6 +23,7 @@
 
 /* Begin PBXFileReference section */
 		6621527925E1012100570B22 /* Bearded guy.ply */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bearded guy.ply"; sourceTree = "<group>"; };
+		6621528925E3936F00570B22 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		6670DC62256C9D1700A979B1 /* ModelViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ModelViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6670DC65256C9D1700A979B1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6670DC67256C9D1700A979B1 /* ShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 		6670DC59256C9D1700A979B1 = {
 			isa = PBXGroup;
 			children = (
+				6621528925E3936F00570B22 /* README.md */,
 				6670DC64256C9D1700A979B1 /* ModelViewer */,
 				6670DC63256C9D1700A979B1 /* Products */,
 			);

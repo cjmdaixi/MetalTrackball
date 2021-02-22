@@ -39,7 +39,7 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var trackballSize: Float = 1.0
     var rotationSpeed: Float = 3
-    var translationSpeed: Float = 0.2
+    var translationSpeed: Float = 0.1
     var scaleSpeed: Float = 0.5
     var screenSize: CGSize!
     
@@ -91,7 +91,7 @@ class Renderer: NSObject, MTKViewDelegate {
         let inverse_mvm = simd_inverse(mvm)
         let firstPos3D = simd_mul(inverse_mvm, firstPos2D)
         let currPos3D = simd_mul(inverse_mvm, currPos2D)
-        let trans_vec = (currPos3D - firstPos3D) * self.translationSpeed
+        let trans_vec = (currPos3D - firstPos3D) * self.translationSpeed * (camera.distance / 8)
         return simd_float3(trans_vec.x, trans_vec.y, trans_vec.z)
     }
     

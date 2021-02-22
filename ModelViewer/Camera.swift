@@ -87,7 +87,7 @@ class Camera {
             )
         }
     }
-    var nearZ: Float = 0.001
+    var nearZ: Float = 0.1
     var farZ: Float = 1000.0
     
     var matrix: simd_float4x4 {

@@ -18,7 +18,7 @@ struct SwiftUIView: View {
                 }
                 
             }){
-                Text("Upper Jaw")
+                Text("Load Demo")
             }
             
         }

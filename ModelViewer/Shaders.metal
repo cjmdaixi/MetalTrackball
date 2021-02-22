@@ -58,8 +58,6 @@ typedef struct
     float4 backColor[[flat]];
 } VertexOut;
 
-constant float3 light_vert = float3(0.5, 0.5, 1.0);
-
 vertex VertexOut vertexShader(const device float3 *positionsIn [[buffer(0)]],
                               const device float3 *normals [[buffer(1)]],
                               constant Uniforms & uniforms [[ buffer(2) ]],
@@ -70,14 +68,12 @@ vertex VertexOut vertexShader(const device float3 *positionsIn [[buffer(0)]],
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * position;
     auto normal = normalize(uniforms.normalMatrix * normals[vid]);
     
-    auto intensity = min(abs(dot(normal, light_vert)), 1.0);
-    out.frontColor = float4(1.0, 0, 0, 1.0) * intensity;
-    out.backColor = float4(0.0, 1.0, 0, 1.0) * intensity;
-    //out.frontColor = Lighting(uniforms.lightSource, uniforms.frontMaterial, normal);
-    //out.backColor = Lighting(uniforms.lightSource, uniforms.backMaterial, normal);
+    out.frontColor = Lighting(uniforms.lightSource, uniforms.frontMaterial, normal);
+    out.backColor = Lighting(uniforms.lightSource, uniforms.backMaterial, normal);
     return out;
 }
 
+[[early_fragment_tests]]
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                bool is_front_face [[ front_facing ]],
                                constant Uniforms & uniforms [[ buffer(0) ]])
