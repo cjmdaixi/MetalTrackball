@@ -8,3 +8,7 @@ This is a demo showing how to implement basic camera manipulation using Metal. T
 
 To show the manipulation, this demo also includes a very simple PLY binary format reader.
 
+Here is the screen shot running on my iPad Pro:
+
+![Screenshot](Screenshots/1.GIF)
+
