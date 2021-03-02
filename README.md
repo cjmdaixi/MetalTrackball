@@ -1,8 +1,8 @@
-#  A boilerplate example for camera manipulation in Metal
+#  An example for camera manipulation in Metal
 
 This is a demo showing how to implement basic camera manipulation using Metal. The camera manipulation includes:
 
-- One finger pan to rotate the scene;
+- One finger pan to rotate the scene, i.e. the trackball;
 - Two finger pinch to zoom in/out the scene;
 - Two finger pan to translate the scene along the current camera view plane.
 
